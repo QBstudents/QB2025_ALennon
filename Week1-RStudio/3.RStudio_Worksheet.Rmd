@@ -69,8 +69,16 @@ Feel free to reference the **1. Introduction to version control and computing to
 4) the log (base e) of your favorite number.
 
 ```{r}
-
-
+print(paste("1)", 5^3))
+#2
+r <- 2
+print(paste ("2)", pi *r**2))
+#3 
+theta <- pi/4
+hyp <- sqrt(2)
+print(paste ("3)",(sin(theta))*hyp))
+#4
+print(paste ("4)", log(2)))
 
 
 ```
@@ -87,8 +95,10 @@ In the R-code chunk below, do the following:
 3) Add `x` and `w` and divide by 15.
 
 ```{r}
-
-
+x <- c(1, 2, 3, 4, 5)
+w <- x*14
+print(w)
+print((x*w)/15)
 
 ```
 
@@ -98,9 +108,12 @@ Now, do the following:
 3) Use the combine function to create one more vector, `d` that consists of any three elements from `w` and any four elements of `k`.
 
 ```{r}
-
-
-
+k <- c(2, 22, 222, 2222, 22222)
+print(x*k)
+print(w)
+print(k)
+d <- c(w[1:3], k[1:4])
+print(d)
 ```
 
 ### Summary Statistics of Vectors
@@ -109,18 +122,13 @@ In the R-code chunk below, calculate the **summary statistics** (i.e., maximum, 
 
 ```{r}
 v <- c(16.4, 16.0, 10.1, 16.8, 20.5, NA, 20.2, 13.1, 24.8, 20.2, 25.0, 20.5, 30.5, 31.4, 27.1)
-
-
-
-
-
-
-
-
-
-
-
-
+print(max(v))
+print(min(v))
+print(sum(v))
+print(mean(v))
+print(median(v))
+print(var(v))
+print(sd(v))
 
 ```
 
