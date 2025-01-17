@@ -1,6 +1,6 @@
 ---
 title: '3\. Worksheet: Basic R'
-author: "Student Name; Z620: Quantitative Biodiversity, Indiana University"
+author: "Anna Lennon; Z620: Quantitative Biodiversity, Indiana University"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 geometry: margin=2.54cm
@@ -49,8 +49,12 @@ In the R code chunk below, please provide the code to:
 3) set your working directory to your '3.RStudio' folder. 
 
 ```{r}
-
-
+#1 
+rm(list = ls())
+#2
+getwd()
+#3
+setwd("/cloud/project/QB2025_ALennon/Week1-RStudio")
 
 ```
 
