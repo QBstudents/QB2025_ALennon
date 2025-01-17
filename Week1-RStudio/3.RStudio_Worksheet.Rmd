@@ -122,13 +122,14 @@ In the R-code chunk below, calculate the **summary statistics** (i.e., maximum, 
 
 ```{r}
 v <- c(16.4, 16.0, 10.1, 16.8, 20.5, NA, 20.2, 13.1, 24.8, 20.2, 25.0, 20.5, 30.5, 31.4, 27.1)
-print(max(v))
-print(min(v))
-print(sum(v))
-print(mean(v))
-print(median(v))
-print(var(v))
-print(sd(v))
+
+print(max(na.omit(v)))
+print(min(na.omit(v)))
+print(sum(na.omit(v)))
+print(mean(na.omit(v)))
+print(median(na.omit(v)))
+print(var(na.omit(v)))
+print(sd(na.omit(v)))
 
 ```
 
