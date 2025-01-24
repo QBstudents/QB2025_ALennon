@@ -141,8 +141,10 @@ Both columns should consist of random numbers.
 Make the mean of the first column equal to 8 with a standard deviation of 2 and the mean of the second column equal to 25 with a standard deviation of 10.
 
 ```{r}
-
-
+c1 <- c(rnorm(5, mean = 8, sd = 2))
+c2 <- c(rnorm(5, mean = 25, sd = 10))
+m1 <- cbind (c1, c2)
+print(m1)
 
 
 
@@ -152,8 +154,9 @@ Make the mean of the first column equal to 8 with a standard deviation of 2 and 
 What do the arguments in this function specify? 
 Remember to use `help()` or type `?rnorm`.
 
-> Answer 1:
-
+> Answer 1: rnorm is a function that generates the normal distribution for a given data set. 
+rnorm(n, mean = 0, sd =1)
+where n is the number of observations, mean is the vector of means, and sd is the vector of standard deviations
 
 In the R code chunk below, do the following: 
 1) Load `matrix.txt` from the **3.RStudio** data folder as matrix `m`.
@@ -161,15 +164,17 @@ In the R code chunk below, do the following:
 3) Determine the dimensions of the transposed matrix.
 
 ```{r}
-
-
-
+m <- as.matrix(read.table("data/matrix.txt", sep ="\t", header = FALSE))
+print(m)
+m2t <- t(m)
+print(dim(m2t))
 ```
 
 
 ***Question 2***: What are the dimensions of the matrix you just transposed?
 
-> Answer 2:
+> Answer 2: [5,10] 
+
 
 
 ###Indexing a Matrix
@@ -179,7 +184,11 @@ In the R code chunk below, do the following:
 2) Remove the last row of matrix `m`.
 
 ```{r}
-
+#print(m)
+mI <- m[ ,c(1:2, 4:5)]
+#print(mI)
+mIrm <-m[-10,]
+print(mIrm)
 
 ```
 
@@ -191,8 +200,10 @@ In the R code chunk below, do the following:
 2) Display the structure of this data set.
 
 ```{r}
+zoop <-read.table("/cloud/project/QB2025_ALennon/Week1-RStudio/data/zoop_nuts.txt", sep = "\t", header = TRUE)
 
-
+print(zoop)
+str(zoop)
 ```
 
 ### Correlation
@@ -203,15 +214,18 @@ In the R-code chunk below, do the following:
 3) Conduct a simple **Pearson's correlation** analysis.
 
 ```{r}
-
-
+zoop.num <- zoop[, 3:8]
+print(zoop.num)
+zoop.bip <- pairs(zoop.num) #output is biplots 
+zoop.cor <-cor(zoop.num)
+print (zoop.cor)
 ```
 
 
 ***Question 3***: Describe some of the general features based on the visualization and correlation analysis above?
 
 > Answer 3:
-
+In general, there seems to be a high, positive correlation between the variables with notiable exceptions of weak negative correlations with the CHLA variable. This pattern is observed visually with the distribution of the vriables on the biplots being roughly linear spread across the plot. The CHLA variable has a clustered, left skewed pattern. 
 
 In the R code chunk below, do the following:
 1) Redo the correlation analysis using the `corr.test()` function in the `psych` package with the following options: method = "pearson", adjust = "BH".
@@ -219,8 +233,19 @@ In the R code chunk below, do the following:
 3) Use the print command from the handout to see the results of each correlation analysis.
 
 ```{r}
+#install.packages("psych", repos = "http://cran.rstudio.com/")
+library(psych)
+
+cor2 <- corr.test(zoop.num, method = "pearson", adjust = "BH")
+print(cor2, digits =3)
 
 
+cor2.5 <- corr.test(zoop.num, method = "pearson")
+print(cor2.5, digits =3)
+
+
+cor3 <- corr.test(zoop.num, method = "kendall", adjust = "BH")
+print(cor3, digits =3)
 
 ```
 
@@ -232,7 +257,7 @@ With the Pearson's method, is there evidence for false discovery rate due to mul
 Why is false discovery rate important?
 
 > Answer 4: 
-
+The results are extremely sensitive to whether you utilize parameters. Traditionally, parametric methods are used for normally distributed data while non parametric are used for continuous data. The Benjamini and Hochberg corrected p-values reduced the potential of type-1 error (false discovery rate) when making multiple comparisons. With the Pearson method, there were multiple correlations being made which increases the probability of false discovery. Type I error is especially problematic as it is a false positive of signficance, skewing the results. 
 ### Linear Regression
 
 In the R code chunk below, do the following:
@@ -241,18 +266,32 @@ In the R code chunk below, do the following:
 3) Produce a plot of this regression analysis including the following: categorically labeled points, the predicted regression line with 95% confidence intervals, and the appropriate axis labels.
 
 ```{r}
+#install.packages("ggplot2")
+#install.packages ("corrplot")
+#install.package.,    s("tidyverse")
+meso <-read.table("/cloud/project/QB2025_ALennon/Week1-RStudio/data/zoop_nuts.txt", sep = "\t", header = TRUE)
+fitreg <- lm(ZP ~ TN, data = meso)
+summary(fitreg)
+
+plot(meso$TN, meso$ZP, ylim = c(0, 10), xlim = c(500, 5000), 
+     xlab = expression(paste("Total Nitrogen (", mu,"g/L)")),
+     ylab = "Zooplankton Biomass (mg/L)", las = 1)
+text(meso$TN, meso$ZP, meso$NUTS, pos = 3, cex = 0.8)
+newTN <- seq(min(meso$TN), max(meso$TN), 10)
+regline <- predict(fitreg, newdata = data.frame(TN = newTN))
+lines(newTN, regline)
+
+conf95 <- predict(fitreg, newdata = data.frame(TN = newTN),
+                  interval = c("confidence"), level = 0.95, type = "response")
+matlines(newTN, conf95[, c("lwr", "upr")], type="l", lty = 2, lwd = 1, col = "black")
 
 
-
-
-
-
-
+      
 ```
 
 ***Question 5***: Interpret the results from the regression model
 
-> Answer 5:
+> Answer 5: Based on the regression model, there appears to be a positive relationship between total nitrogen and zooplankton biomass. Additioanlly, the distribution of low, medium, and high are relatively evenly distributed with low being the most clustered around under 1000. One particular note, there are two "high" values that have a lower biomass compared to the other high values around 3000-4000 ug/L. It would be interesting to determine if these values are outliers. 
 
 
 ```{r}
@@ -270,10 +309,29 @@ Using the R code chunk below, do the following:
 
 ```{r}
 
+nuts <- zoop$NUTS
+ZP <-zoop$ZP
+nuts.order <- factor(nuts, levels = c("L", "M", "H"))
+print(nuts.order)
 
+# Standard Errors
+zp.means <- tapply(zoop$ZP, nuts.order, mean)
+sem <- function(x) { sd(na.omit(x)) / sqrt(length(na.omit(x))) }
+zp.sem <- tapply(ZP, nuts, sem)
 
+# Plot
+bp <- barplot(zp.means, ylim = c(0, round(max(ZP), digits = 0)), pch = 15, cex = 1.25, las = 1, 
+              cex.lab = 1.4, cex.axis = 1.25,
+              xlab = "Nutrient supply", ylab = "Zooplankton biomass (mg/L)",
+              names.arg = c("low", "medium", "high"))
+#error bars
+arrows(x0 = bp, y0 =zp.means, y1 = zp.means - zp.sem, angle =90, length = .1, lwd =1)
+arrows(x0 = bp, y0 =zp.means, y1 = zp.means + zp.sem, angle =90, length = .1, lwd =1)
 
-
+#ANOVA
+nitroAOV <- aov(ZP ~ nuts, data = meso)
+summary(nitroAOV)
+TukeyHSD(nitroAOV)
 
 
 ```
@@ -306,11 +364,83 @@ The remaining columns of data refer to the biomass (µg/L) of different zooplank
 Describe what you learned below in the "Answer" section and include appropriate code in the R chunk.
 
 ```{r}
+library(ggplot2)
+library(corrplot)
+#install.packages("corrplot")
+#read in zoops.txt as a data frame
+zoops <- as.data.frame(read.table("/cloud/project/QB2025_ALennon/Week1-RStudio/data/zoops.txt", sep = "\t", header = TRUE))
+print(zoops)
+zoops.df.clean <- subset(zoops, select = -c(TANK, NUTS))
+
+# Site column
+zoops.df.clean$Site[1:24] <- 1:24
+zoops.df.clean <- zoops.df.clean[, c("Site", setdiff(names(zoops.df.clean), "Site"))]
+
+print(zoops.df.clean)
+
+#total Biomass column
+zoops.df.clean$Total.Biomass <- rowSums(zoops.df.clean[, -1])
+
+# Print the updated dataframe
+print(zoops.df.clean)
+str(zoops.df.clean)
+
+#Graphical Visualization
+zoop.bp <-ggplot(zoops.df.clean, aes (x= Site, y = Total.Biomass)) +geom_bar(stat = "identity") + labs (x = "Site", y = "Total Biomass (mg/L", title = "Total Biomass By Site")+ geom_text(aes(label = Site), vjust = -0.5) +theme_minimal()
+print(zoop.bp)
+
+pairs(zoops.df.clean)
 
 
+#Pearson's correlation
+zoop.cor <- corr.test(zoops.df.clean, method = "pearson", adjust = "BH")
+print(zoop.cor, digits = 3)
+require("corrplot")
+corrplot(zoop.cor$r, method = "ellipse")
+title("Correlation Heatmap")
+
+require(psych)
+
+cor_matrix <- zoop.cor$r  
+p_values <- zoop.cor$p    
+significance_level <- 0.05
+
+
+cor_df <- as.data.frame(as.table(cor_matrix))
+p_df <- as.data.frame(as.table(p_values))
+
+significant_results <- cbind(cor_df, p_value = p_df$Freq)
+
+colnames(significant_results) <- c("Variable1", "Variable2", "Correlation", "P_Value")
+
+# Filter to keep only significant values
+significant_results_df <- significant_results[significant_results$P_Value < significance_level, ]
+
+# View the significant correlations
+print(significant_results_df)
+
+#Signficant values Graphical Representation
+significant_cor_matrix <- cor_matrix
+significant_cor_matrix[!(p_values < significance_level)] <- NA
+require("corrplot")
+corrplot(significant_cor_matrix, method = "ellipse", na.label = " ")
+title("Significant Correlation Heatmap")
+
+#Linear Regression
+CHYD <- zoops.df.clean$CHYD
+ZP <- zoops.df.clean$Total.Biomass
+
+
+plot(CHYD, ZP,
+     xlab = "Chydrous Biomass (mg/L)",
+     ylab = "Total Biomass (mg/L)",
+     main = "Chydrous Biomass as a Predictor for Total Biomass")
+text(CHYD, ZP, zoops.df.clean$Site, pos = 1, cex =.6)
 
 
 ```
+
+> Answer 6: For this dataset, multiple steps were done to determine the impact of taxa on total biomass. A site by species dataframe was created along with a new variable, Total.Biomass, which was the total biomass at each site. A bar plot, Total Biomass By Site, represents the total biomass per site to highlight the overall variation of biomass at different sites. A Pearson's correlation was conducted to determine the signifcant correlations (Correlation Heatmap). From the Pearson correlation, signficant results (p-value < .05), were separated (Signficant Correlation Heatmap). All signficant correlations were positive and the only taxa that had a signficant, positive correlation on total biomass was the CHYD (Chydrous) taxa (Chydrous Biomass as a Predictor for Total Biomass).
 
 ## SUBMITTING YOUR WORKSHEET
 Use Knitr to create a PDF of your completed **3.RStudio_Worksheet.Rmd** document, push the repo to GitHub, and create a pull request.
