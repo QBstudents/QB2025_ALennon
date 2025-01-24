@@ -82,6 +82,15 @@ site1.sum.v <- specnumber(BCI[1,])
 
 print(paste("Vegan=", site1.sum.v))
 print(paste("Function=", site1.sum.f))
+###
+site4.sum.f <- S.obs(BCI[1:4,])
+
+site4.sum.v <- specnumber(BCI[1:4,])
+
+print(paste("Vegan=", site4.sum.v))
+print(paste("Function=", site4.sum.f))
+
+
 
 
 ```
@@ -90,7 +99,7 @@ print(paste("Function=", site1.sum.f))
 What is the species richness of the first four sites (i.e., rows) of the BCI matrix?
 
 > ***Answer 1***:
->
+>The vegan library "specnumber()" output is the same as the same as the written function. For Site 1, the species richness is 93, Site 2 is 84, Site 3 is 90, and Site 4 is 94
 
 
 ### Coverage: How well did you sample your site?
@@ -102,7 +111,14 @@ In the R code chunk below, do the following:
 2. Use that function to calculate coverage for all sites in the BCI matrix.
 
 ```{r}
+GC <- function (x = ""){1- (rowSums(x ==1)/rowSums(x))}
+GC_all <- GC(BCI)
+print(GC_all)
 
+GC.df <-data.frame(GC_all)
+print(GC.df)
+range(GC.df)
+max(GC.df)
 
 ```
   
@@ -114,16 +130,16 @@ c.  What portion of taxa in `site1` was represented by singletons?
 d.  Make some observations about coverage at the BCI plots.
 
 > ***Answer 2a***:
->
+>Good's Coverage results in values <1. For the BCI dataset, the range of values was [.8706, .9469]. 
 
 > ***Answer 2b***:
->
+>If n1 = N in Good's Coverage, then the coverage would equal to zero. This would insinuate that all the taxa sampled are singleton species and all organisms found in the population are rare. Therefore, the sample is extremely diverse or there is a potential for sampling error given the high number of rare taxa.
 
 > ***Answer 2c***: 
->
+>From calculating Good's Coverage for the BCI dataset, .9308 (93.08%) of the taxa at Site 1 are singletons.
 
 > ***Answer 2d***: 
->
+>Given that the range of singletons is 87.06% to 94.69%, a majority of taxa represented in the BCI at each site is singletons. Therefore, the samples are rich in biodiversity but low in evenness. 
 
 
 ### Estimated richness
@@ -141,7 +157,8 @@ In the R code chunk below, do the following:
 5. Calculate coverage of that site
 
 ```{r}
-
+soil.bac <-read.table("data/soilbac.txt", sep = "\t", header =TRUE, row.names =1)
+print(soil.bac)
 
 
 
