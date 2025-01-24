@@ -69,9 +69,15 @@ In the R code chunk below, do the following:
 
 ```{r}
 
-# S.obs <- function(   ){
-#   rowSums(     ) * 
-#   }
+S.obs <- function(x = ""){
+   rowSums(x>0) *1 
+   }
+print(S.obs)
+
+print(BCI)
+
+S.obs(BCI[,1])
+dim
 
 ```
 
