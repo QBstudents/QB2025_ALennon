@@ -1,6 +1,6 @@
 ---
 title: '5\. Worksheet: Alpha Diversity'
-author: "Student Name; Z620: Quantitative Biodiversity, Indiana University"
+author: "Anna Lennon"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 geometry: margin = 2.54cm
@@ -35,10 +35,11 @@ In the R code chunk below, please provide the code to:
 4) Load the `vegan` R package (be sure to install first if you have not already).
 
 ```{r}
-
-
-
-
+rm(list = ls())
+getwd()
+cd ./cloud/project/QB2025_ALennon/Week2-Alpha
+#install.packages("vegan")
+library(vegan)
 ```
 
 ## 2) LOADING DATA
@@ -48,8 +49,8 @@ In the R code chunk below, do the following:
 2) Display the structure of the dataset (if the structure is long, use the `max.level = 0` argument to show the basic information).
 
 ```{r}
-
-
+data(BCI)
+str(BCI) #str(BCI, max.level = 0)
 ```
 
 ## 3) SPECIES RICHNESS
@@ -68,9 +69,15 @@ In the R code chunk below, do the following:
 
 ```{r}
 
-# S.obs <- function(   ){
-#   rowSums(     ) * 
-#   }
+S.obs <- function(x = ""){
+   rowSums(x>0) *1 
+   }
+print(S.obs)
+
+print(BCI)
+
+S.obs(BCI[,1])
+dim
 
 ```
 
