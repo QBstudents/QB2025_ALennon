@@ -159,6 +159,20 @@ In the R code chunk below, do the following:
 ```{r}
 soil.bac <-read.table("data/soilbac.txt", sep = "\t", header =TRUE, row.names =1)
 print(soil.bac)
+soil.bac.t <-as.data.frame(t(soil.bac))
+soilbac1 <-soil.bac.t[2,]
+print(soilbac1)
+soilbac1.r <-S.obs(soilbac1)
+print(soilbac1.r)
+
+GC.soilbac1 <- GC(soilbac1)
+
+
+BCI.1 <-BCI[2,]
+
+GC.BCI.1 <-GC(BCI.1)
+print(paste("KBS:", GC.soilbac1))
+print(paste("BCI:", GC.BCI.1))
 
 
 
@@ -173,13 +187,13 @@ b.  What is the observed richness of `soilbac1`?
 c.  How does coverage compare between the BCI sample (`site1`) and the KBS sample (`soilbac1`)?
 
 > ***Answer 3a***:
->
+>There were 19 total indviduals recovered. 
 
 > ***Answer 3b***: 
->
+>1302 species
 
 > ***Answer 3c***: 
->
+>The KBS dataset has signifcantly less singletons present (66.77%) compared to BCI (92.87%) at Site 2. Therefore, there are more rare species in the BCI dataset. 
 
 
 ### Richness estimators
@@ -195,12 +209,23 @@ In the R code chunk below, do the following:
 4. Use these functions to estimate richness at `site1` and `soilbac1`. 
 
 ```{r}
+#abundance
+chao1 <- function(x ="") {
+  S.obs(x) + (sum(x==1)^2)/(2*sum(x ==2))
+} 
+#incidence
+chao2 <- function(site = "", SbyS = "") {
+  SbyS = as.data.frame(SbyS)
+  x = SbyS[site,]
+  SbyS.pa <- (SbyS >0) *1
+  Q1 = sum(colSums(SbyS.pa) ==1)
+  Q2 = sum(colSums(SbyS.pa) ==2)
+  chao2 = S.obs(x) +(Q1^2)/(2*Q2)
+  return(chao2)
+}
 
 
-
-
-
-
+#abndance coverage
 
 
 ```
