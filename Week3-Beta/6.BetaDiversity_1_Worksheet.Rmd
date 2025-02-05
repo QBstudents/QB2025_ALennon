@@ -51,7 +51,8 @@ In the R code chunk below, please provide the code to:
 ```{r}
 rm(list=ls())
 getwd()
-#setwd("cloud/project/QB2025_ALennon/Week3-Beta")
+#setwd("cloud/project/AB2025_ALennon/Week3-Beta")
+
 ```
 
 ## 2) LOADING DATA
@@ -271,6 +272,65 @@ In the R code chunk below, do the following:
 5. identify influential species and add species coordinates to PCoA plot.
 
 ```{r}
+`add.spec.scores.class` <-
+  function(ordi,comm,method="cor.scores",multi=1,Rscale=F,scaling="1") {
+    ordiscores <- scores(ordi,display="sites")
+    n <- ncol(comm)
+    p <- ncol(ordiscores)
+    specscores <- array(NA,dim=c(n,p))
+    rownames(specscores) <- colnames(comm)
+    colnames(specscores) <- colnames(ordiscores)
+    if (method == "cor.scores") {
+      for (i in 1:n) {
+        for (j in 1:p) {specscores[i,j] <- cor(comm[,i],ordiscores[,j],method="pearson")}
+      }
+    }
+    if (method == "wa.scores") {specscores <- wascores(ordiscores,comm)}
+    if (method == "pcoa.scores") {
+      rownames(ordiscores) <- rownames(comm)
+      eigenv <- ordi$eig
+      accounted <- sum(eigenv)
+      tot <- 2*(accounted/ordi$GOF[2])-(accounted/ordi$GOF[1])
+      eigen.var <- eigenv/(nrow(comm)-1)
+      neg <- length(eigenv[eigenv<0])
+      pos <- length(eigenv[eigenv>0])
+      tot <- tot/(nrow(comm)-1)
+      eigen.percen <- 100*eigen.var/tot
+      eigen.cumpercen <- cumsum(eigen.percen)
+      constant <- ((nrow(comm)-1)*tot)^0.25
+      ordiscores <- ordiscores * (nrow(comm)-1)^-0.5 * tot^-0.5 * constant
+      p1 <- min(p, pos)
+      for (i in 1:n) {
+        for (j in 1:p1) {
+          specscores[i,j] <- cor(comm[,i],ordiscores[,j])*sd(comm[,i])/sd(ordiscores[,j])
+          if(is.na(specscores[i,j])) {specscores[i,j]<-0}
+        }
+      }
+      if (Rscale==T && scaling=="2") {
+        percen <- eigen.var/tot
+        percen <- percen^0.5
+        ordiscores <- sweep(ordiscores,2,percen,"/")   
+        specscores <- sweep(specscores,2,percen,"*")
+      }
+      if (Rscale==F) {
+        specscores <- specscores / constant
+        ordiscores <- ordi$points
+      }        
+      ordi$points <- ordiscores
+      ordi$eig <- eigen.var
+      ordi$eig.percen <- eigen.percen
+      ordi$eig.cumpercen <- eigen.cumpercen
+      ordi$eigen.total <- tot
+      ordi$R.constant <- constant
+      ordi$Rscale <- Rscale
+      ordi$scaling <- scaling
+    }
+    specscores <- specscores * multi    
+    ordi$cproj <- specscores
+    return(ordi)
+  }
+
+
 fish.pcoa <- cmdscale(fish.db, eig = TRUE, k = 3) 
 
 #First 3 axes
@@ -341,19 +401,44 @@ b.  Generate a hypothesis about which fish species are potential indicators of r
 Load the dataset from that you and your partner are using for the team project. 
 Use one of the tools introduced in the beta diversity module to visualize your data. 
 Describe any interesting patterns and identify a hypothesis is relevant to the principles of biodiversity.
->Question: What is the influence of the type of mycrohizal association on tree species abundance when exposed to the pressure of invasive species? 
-Hypothesis: Mycorrhizal association will influence tree species abundnace in plots containing invasive species. 
+>Question: What is the influence of the type of mycorrhizal association on tree species abundance when exposed to the pressure of invasive species? 
+Hypothesis: Mycorrhizal association will influence tree species abundance in plots containing invasive species. 
 Prediction: In particular, plots with invasive pressures will have reduced biodiversity compared to plots without invasive species given the ability for invasive species to outcompete native species. when looking at mycorrhizal association, AM trees will have greater abundance in comparison to EMC species. 
 
-```{r}
+>This is having so much trouble switching directories. I am not sure what do do- it is in text format while I try to figure out why it will not switch. 
+
 getwd()
 setwd("/cloud/project/QB_biodiversity_project_EH")
+# Load necessary libraries
+library(vegan)
 library(tibble)
-#Read everything in
+library(lattice)
+
+# Read the CSV file
 tree <- read.csv("TREE.csv")
-print(tree)
+#print(tree)
 
 tree.species.df <- data.frame(Plot_ID = tree$PLOT, Species_ID = tree$SPCD)
-print(tree.species.df)
-```
+#print(tree.species.df)
+
+tree.ss.df <- as.data.frame.matrix(table(tree.species.df$Plot_ID, tree.species.df$Species_ID))
+tree.ss.df <- rownames_to_column(tree.ss.df, var = "Plot_ID")
+tree.ss.df <-tree.ss.df[1:100,1:100]
+#print(tree.ss.df)
+
+tree.species.only.df <- tree.ss.df[, -1]
+print(tree.species.only.df)
+
+tree.species.only.df.L <-tree.species.df
+
+#Bray-Curtis 
+
+tree.db <-vegdist(tree.species.only.df, method = "bray")
+
+order <-rev(attr(tree.db, "Labels"))
+levelplot(as.matrix(tree.db)[,order], aspect = "iso", col.regions =inferno,
+         xlab = "Plot", ylab = "Plot", scales =list(cex =.5),
+         main = "Bray-Curtis Distance")
+)
+
 
