@@ -120,7 +120,6 @@ env.dist <- vegdist(scale(doubs$env[-8,]),method = "euclid")
 
 #Mantel Test
 mantel(fish.dist,env.dist)
-
 ```
 
 ***Question 2***: What do the results from our Mantel test suggest about fish diversity and stream environmental conditions? 
@@ -299,14 +298,12 @@ tree.species.df <- tree.species.df %>%
 tree.species.df$PlotStatus <- NA
 
 ># Loop through rows of tree.species.df
-for (i in seq_len(nrow(tree.species.df))) {  
-  if (tree.species.df$Plot_ID[i] %in% invasive$PLOT) {  
-    tree.species.df$PlotStatus[i] <- "invasive"  
-  } else {  
-    tree.species.df$PlotStatus[i] <- "non-invasive"  
-  }
-}
-#Site by Speccies
+>for (i in seq_len(nrow(tree.species.df))) {  
+  >if (tree.species.df$Plot_ID[i] %in% invasive$PLOT) {  
+    >tree.species.df$PlotStatus[i] <- "invasive"} else {  
+    >tree.species.df$PlotStatus[i] <- "non-invasive"}}
+    
+>#Site by Speccies
 tree.species.df.1 <-data.frame(Plot_ID = c(tree$PLOT),
                                Species_ID =c(tree$SPCD))
 #print(tree.species.df)
