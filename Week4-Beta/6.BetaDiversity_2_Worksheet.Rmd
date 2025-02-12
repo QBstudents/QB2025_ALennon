@@ -45,8 +45,6 @@ In the R code chunk below, provide the code to:
 rm(list=ls())
 getwd()
 setwd("/cloud/project/QB2025_ALennon/Week4-Beta")
-
-
 ```
 
 ## 2) LOADING DATA
@@ -65,7 +63,7 @@ library("indicspecies")
 library("tidyverse")
 library("indicspecies")
 library("permute")
-#install.packages("adonis2")
+#install.packages("virdisLite")
 data(doubs)
 #print(doubs)
 
@@ -82,9 +80,11 @@ In the code chunk below, test the hypothesis that fish community composition var
 
 ```{r}
 fish <-doubs$fish
+fish <-fish[-8,]
 quality <- c(rep("HQ", 13), rep("MQ", 5), rep("LQ", 6), rep("MQ", 5))
+#print(quality)
 #PERMANOVA
-adonis(fish ~ quality, method = "bray", permutations = 999)
+adonis2(fish ~ quality, method = "bray", permutations = 999)
 
 #Species-Site 
 indval <- multipatt(fish, cluster = quality, func = "IndVal.g", 
@@ -95,14 +95,14 @@ summary(indval)
 fish.rel <- decostand(fish, method = "total")
 fish.phi <- multipatt(fish.rel, cluster = quality, func = "r.g", 
         control = how(nperm=999)) 
-summary(phi)
+summary(fish.phi)
 
 ```
 
 ***Question 1***: Based on the PERMANOVA, IndVal, and phi coefficient analyses, what did you learn about the relationship between habitat quality and the fish species composition?
 Are the different analyses consistent with one another and do they agree with the visualizations (heat maps, cluster dendograms, ordinations) that you created?
 
-> ***Answer 1***: 
+> ***Answer 1***: Overall, the various hypothesis tests are in consensus that habitat quality and fish species composition are highly related at a signficant level. In particular, the high quality habitat are highly correlated with fish species. The results of the hypothesis testing matches with the visualizations. 
 
 
 ### B.  Multivariate Procedures for Continuous Designs
@@ -126,7 +126,7 @@ mantel(fish.dist,env.dist)
 ***Question 2***: What do the results from our Mantel test suggest about fish diversity and stream environmental conditions? 
 How does this relate to your hypothesis about stream quality influencing fish communities?
 
-> ***Answer 2***:  
+> ***Answer 2***:  Given the r-statistic is .604 with a p-value of .001, fish diversity and stream environmental conditions are strongly related. Therefore, environmental conditions provide a strong indicator of fish diversity. I had hypothesized that stream quality would impact fish communities and predicted this would be a positive correlation. 
 
 ### ii.  Constrained Ordination
 In the R code chunk below, do the following:  
@@ -139,6 +139,10 @@ In the R code chunk below, do the following:
 6. plot the constrained ordination results including labeled points for each site, and
 7. add vectors that demonstrate the influence of each environmental factor the constrained ordination.   
 ```{r}
+#Bray-curtis
+fish.db <- vegdist(fish, method = "bray")
+fish.db <- vegdist(fish, method = "bray", upper = TRUE, diag = TRUE)
+#matrix
 env.chem <- as.matrix(doubs$env[-8 , 5:11])
 doubs.dbrda <- dbrda(fish.db ~ ., as.data.frame(env.chem))
 ordiplot(doubs.dbrda)
@@ -202,7 +206,7 @@ axis(side = 4, lwd.ticks=2, cex.axis=1.2, las = 1, col = "cadetblue", lwd = 2.2,
 
 ***Question 3***: Based on the constrained ordination, what are the environmental variables (or groups of correlated variables) that seem to be contributing to variation in fish community structure?
 
-> ***Answer 3***: 
+> ***Answer 3***: Oxygen ("oxy"), dissolved oxygen content ("bdo"), and nitrogen ("nit") are the three environmental variables that contribute the greatest to variation in the fish community. 
 
 ### iii. Variation Partitioning
 In the code chunk below,   
@@ -261,19 +265,67 @@ mtext("Variation Partitioning of\nDoubs Fish Diversity", side = 3, line = -3)
 
 ***Question 4***: Interpret the variation partitioning results.   
 
-> ***Answer 4***: 
+> ***Answer 4***: For the fish diversity in the Doubs river, .13 of the variation can be accounted from the environment and .24 from Space, meaning Space contributes to more of the variation. However, there is .37 of the variation that is due to a mix of both the environment and space and .27 of the variation that is explained by neither the environment and space. Given the high percentage of variation explained by space, the environment, and both, space and environment are good predictors of Doubs fish variation. 
 
 ## SYNTHESIS
 
 Load the dataset from that you and your partner are using for the team project. 
 Use one of the hypothesis-testing tools introduced in the beta diversity module. 
 Interpret the findings of your data with respect to principles of biodiversity. 
-```{r}
+
+>Running the follwoing code will not allow it to knit in reasonable time- I will upload the code in an R markdown when it finishes running (Anna 11:41 2/12/2025)
 setwd("/cloud/project/QB_biodiversity_project_EH")
 # Load necessary libraries
 library(vegan)
 library(tibble)
 library(lattice)
-
+library(readxl)
+library(dplyr)
+library(tidyr)
 #load in data from separate R script file
-```
+tree <-read.csv("TREE.csv")
+
+>tree.species.df <-data.frame(Plot_ID = c(tree$PLOT),
+                             SPCD =c(tree$SPCD))
+myco <-as.data.frame(read_xlsx("MycoType_ref2.xlsx"))
+myco<- myco[,-c(3:7)]
+invasive <-read_xlsx("INVASIVE.xlsx")
+untree.species <- unique(tree.species.df$SPCD)
+unmyco.species <-unique(myco$SPCD)
+tree.species.df <- tree.species.df %>%
+  filter(!SPCD %in% c(999, 998)) 
+
+>#add myco type
+tree.species.df$PlotStatus <- NA
+
+># Loop through rows of tree.species.df
+for (i in seq_len(nrow(tree.species.df))) {  
+  if (tree.species.df$Plot_ID[i] %in% invasive$PLOT) {  
+    tree.species.df$PlotStatus[i] <- "invasive"  
+  } else {  
+    tree.species.df$PlotStatus[i] <- "non-invasive"  
+  }
+}
+#Site by Speccies
+tree.species.df.1 <-data.frame(Plot_ID = c(tree$PLOT),
+                               Species_ID =c(tree$SPCD))
+#print(tree.species.df)
+
+
+>tree.ss.df <- as.data.frame.matrix(table(tree.species.df.1$Plot_ID, tree.species.df.1$Species_ID))
+tree.ss.df <- rownames_to_column(tree.ss.df, var = "Plot_ID")
+#print(tree.ss.df)
+
+>tree.species.only.df <- tree.ss.df[, 2:ncol(tree.ss.df)]
+
+
+>#Create Factors vector
+
+>factor <- factor(tree.species.df$PlotStatus)
+
+>length(factor)
+nrow(tree.species.only.df)
+
+>factor_trimmed <- factor[1:nrow(tree.species.only.df)]
+
+>adonis2(tree.species.only.df ~ factor_trimmed, method = "bray", permutations = 999)
