@@ -51,7 +51,7 @@ In the R code chunk below, please provide the code to:
 ```{r}
 rm(list=ls())
 getwd()
-#setwd("cloud/project/AB2025_ALennon/Week3-Beta")
+setwd("/cloud/project/QB2025_ALennon/Week3-Beta")
 
 ```
 
@@ -405,7 +405,7 @@ Describe any interesting patterns and identify a hypothesis is relevant to the p
 Hypothesis: Mycorrhizal association will influence tree species abundance in plots containing invasive species. 
 Prediction: In particular, plots with invasive pressures will have reduced biodiversity compared to plots without invasive species given the ability for invasive species to outcompete native species. when looking at mycorrhizal association, AM trees will have greater abundance in comparison to EMC species. 
 
->This is having so much trouble switching directories. I am not sure what do do- it is in text format while I try to figure out why it will not switch. 
+```{r}
 
 getwd()
 setwd("/cloud/project/QB_biodiversity_project_EH")
@@ -439,6 +439,6 @@ order <-rev(attr(tree.db, "Labels"))
 levelplot(as.matrix(tree.db)[,order], aspect = "iso", col.regions =inferno,
          xlab = "Plot", ylab = "Plot", scales =list(cex =.5),
          main = "Bray-Curtis Distance")
-)
 
+```
 
