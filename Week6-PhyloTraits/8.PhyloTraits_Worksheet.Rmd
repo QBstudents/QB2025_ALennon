@@ -1,6 +1,6 @@
 ---
 title: '8\. Worksheet: Phylogenetic Diversity - Traits'
-author: "Student Name; Z620: Quantitative Biodiversity, Indiana University"
+author: "Anna Lennon"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 geometry: margin=2.54cm
@@ -43,7 +43,43 @@ In the R code chunk below, provide the code to:
 4. load all of the required R packages (be sure to install if needed).  
 
 ```{r}
-
+rm(list=ls())
+getwd()
+setwd("/cloud/project/QB2025_ALennon/Week6-PhyloTraits")
+# package.list <- c('ape', 'seqinr', 'phylobase', 'adephylo', 'geiger', 'picante', 'stats', 'RColorBrewer', 'caper', 'phylolm', 'pmc', 'ggplot2', 'tidyr', 'dplyr', 'phangorn', 'pander') 
+# for (package in package.list) {
+#   if (!require(package, character.only=TRUE, quietly=TRUE)) {
+#     install.packages(package)
+#     library(package, character.only=TRUE)
+#   }
+# }
+# install.packages("pak")
+# #comment out after first run to prevent continuous reinstall/update
+# pak::pkg_install("msa")
+# 
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("Biostrings")
+library(bios2mds)
+library(Biostrings)
+library(ape)
+library(seqinr)
+library(phylobase)
+library(adephylo)
+library(geiger)
+library(picante)
+library(stats)
+library(RColorBrewer)
+library(phylolm)
+library(caper)
+library(pmc)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(phangorn)
+library(pander)
+library(msa)
 
 ```
 
@@ -58,7 +94,7 @@ In this exercise, we will take a phylogenetic approach to mapping phosphorus res
 ***Question 1***: Using your favorite text editor, compare the `p.isolates.fasta` file and the `p.isolates.afa` file. 
 Describe the differences that you observe between the two files. 
 
-> ***Answer 1***: 
+> ***Answer 1***: Both the fasta and afa file contain a series of nucleotides (ACGT) color coded. However, the fasta file does not contain any gaps and the output is much more extensive compared the afa file that is cmpressed to view the last line of nucleotides (1500) for the samples and contains the gaps present in the genome.
 
 In the R code chunk below, do the following:
 1. read your alignment file,
@@ -67,13 +103,15 @@ In the R code chunk below, do the following:
 4. plot the alignment using a grid to visualize rows of sequences.
 
 ```{r}
-package.list <- c('ape', 'seqinr', 'phylobase', 'adephylo', 'geiger', 'picante', 'stats', 'RColorBrewer', 'caper', 'phylolm', 'pmc', 'ggplot2', 'tidyr', 'dplyr', 'phangorn', 'pander') 
-for (package in package.list) {
-  if (!require(package, character.only=TRUE, quietly=TRUE)) {
-    install.packages(package)
-    library(package, character.only=TRUE)
-  }
-}
+seq.fasta <-readDNAStringSet("data/p.isolates.fasta", format = "fasta")
+seq.afa <-readDNAStringSet("data/p.isolates.afa", format = "fasta")
+
+# seq.fasta
+# seq.afa
+
+read.aln.fasta <-msaMuscle(seq.fasta)
+save.aln.fasta <-msaConvert(read.aln.fasta, type = "bios2mds::align")
+export.fasta(save.aln.fasta, "./data/p.isolates.2.afa")
 
 ```
 
