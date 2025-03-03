@@ -1,6 +1,6 @@
 ---
 title: '9\.Phylogenetic Diversity - Communities'
-author: "Student Name; Z620: Quantitative Biodiversity, Indiana University"
+author: "Anna Lennon
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 geometry: margin=2.54cm
@@ -45,7 +45,36 @@ In the R code chunk below, provide the code to:
 5. load the required R source file.
 
 ```{r}
+rm(list=ls())
+getwd()
+setwd("/cloud/project/QB2025_ALennon/Week7-PhyloCom")
+# package.list <- c('picante', 'ape', 'seqinr', 'vegan', 'fossil', 
+#                   'reshape', 'devtools', 'BiocManager', 'ineq', 
+#                   'labdsv', 'matrixStats', 'pROC')
+# for (package in package.list) {
+#   if (!require(package, character.only = TRUE, quietly = TRUE)) {
+#     install.packages(package, repos='http://cran.us.r-project.org')
+#     library(package, character.only = TRUE)
+#   }
+# }
+# 
+# install.packages("reshape")
 
+library(picante)
+library(ape)
+library(seqinr)
+library(vegan)
+library(fossil)
+library(reshape)
+library(devtools)
+library(BiocManager)
+library(ineq)
+library(labdsv)
+library(matrixStats)
+library(pROC)
+
+
+source("./bin/MothurTools.R")
 
 ```
 
@@ -71,8 +100,19 @@ In the R code chunk below, do the following:
 6. load the taxonomic data using the `read.tax()` function from the source-code file.
 
 ```{r}
+env <- read.table("data/20130801_PondDataMod.csv", sep = ",", header = TRUE)
+env <- na.omit(env)
 
+#ss and cleaning
+comm.ss <- read.otu(shared = "./data/INPonds.final.rdp.shared", cutoff = "1")
+comm.ss <- comm.ss[grep("*-DNA", rownames(comm.ss)), ]
+rownames(comm.ss) <- gsub("\\-DNA", "", rownames(comm.ss))
+rownames(comm.ss) <- gsub("\\_", "", rownames(comm.ss))
+comm.ss <- comm.ss[rownames(comm.ss)  %in% env$Sample_ID, ]
+comm.ss <- comm.ss[ , colSums(comm.ss) > 0]
 
+#taxonomy
+tax <- read.tax(taxonomy = "./data/INPonds.final.rdp.1.cons.taxonomy")
 ```
 
 Next, in the R code chunk below, do the following:  
@@ -87,6 +127,26 @@ Next, in the R code chunk below, do the following:
 9. plot the rooted tree.
 
 ```{r}
+ponds.cons <- read.alignment(file = "./data/INPonds.final.rdp.1.rep.fasta", 
+                             format = "fasta")
+ponds.cons$nam <- gsub(".*\t", "", ponds.cons$nam)
+ponds.cons$nam <- gsub("\\|.*", "", ponds.cons$nam)
+#Visualize
+outgroup <- read.alignment(file = "./data/methanosarcina.fasta", format = "fasta")
+DNAbin <- rbind(as.DNAbin(outgroup),as.DNAbin(ponds.cons))
+image.DNAbin(DNAbin, show.labels = T, cex.lab = 0.05, las = 1) 
+
+#Distance Matrix
+seq.dist.FC <- dist.dna(DNAbin, model = "F84", pairwise.deletion = FALSE)
+phy.all <- bionj(seq.dist.FC)
+phy <- drop.tip(phy.all, phy.all$tip.label[!phy.all$tip.label %in% 
+              c(colnames(comm.ss), "Methanosarcina")])
+outgroup <- match("Methanosarcina", phy$tip.label)
+phy <- root(phy, outgroup, resolve.root = TRUE)
+par(mar = c(1, 1, 2, 1) + 0.1)
+plot.phylo(phy, main = "Neighbor Joining Tree (F84)", "phylogram", 
+      show.tip.label = FALSE, use.edge.length = FALSE, 
+      direction = "right", cex = 0.6, label.offset = 1)
 
 
 ```
@@ -98,7 +158,7 @@ In the R code chunk below, do the following:
 1. calculate Faith's D using the `pd()` function.
 
 ```{r}
-
+pd <- pd(comm.ss, phy, include.root = FALSE)
 
 ```
 
@@ -108,6 +168,18 @@ In the R code chunk below, do the following:
 3. calculate the scaling exponent. 
 
 ```{r}
+par(mar = c(5, 5, 4, 1) + 0.1)
+
+plot(log(pd$S), log(pd$PD), 
+     pch = 20, col = "azure3", las = 1,
+     xlab = "ln(S)", ylab = "ln(PD)", cex.main = 1,
+     main="Phylodiversity (PD) vs. Taxonomic richness (S)")
+
+fit <- lm('log(pd$PD) ~ log(pd$S)')
+abline(fit, col = "red3", lw = 2)
+exponent <- round(coefficients(fit)[2], 2)
+legend("topleft", legend=paste("Scaling exponent = ", exponent, sep = ""), 
+       bty = "n", lw = 2, col = "red3") 
 
 
 ```
@@ -128,7 +200,9 @@ In the R code chunk below, do the following:
 1. estimate the standardized effect size of PD using the `richness` randomization method.  
 
 ```{r}
-
+ses.pd <- ses.pd(comm.ss[1:2,], phy, null.model = "richness", runs = 25, 
+                 include.root = FALSE)
+?ses.pd
 
 ```
 
@@ -149,7 +223,7 @@ In the R code chunk below, do the following:
 1. calculate the phylogenetic resemblance matrix for taxa in the Indiana ponds data set.
 
 ```{r}
-
+phydist <- cophenetic.phylo(phy)
 
 ```
 
@@ -159,7 +233,11 @@ In the R code chunk below, do the following:
 1. Calculate the NRI for each site in the Indiana ponds data set. 
 
 ```{r}
-
+ses.mpd <- ses.mpd(comm.ss, phydist, null.model = "taxa.labels", 
+                   abundance.weighted = FALSE, runs = 25)
+NRI <- as.matrix(-1 * ((ses.mpd[,2] - ses.mpd[,3]) / ses.mpd[,4]))
+rownames(NRI) <- row.names(ses.mpd)
+colnames(NRI) <- "NRI"
 
 ```
 
@@ -169,6 +247,11 @@ In the R code chunk below, do the following:
 1. Calculate the NTI for each site in the Indiana ponds data set. 
 
 ```{r}
+ses.mntd <- ses.mntd(comm.ss, phydist, null.model = "taxa.labels", 
+                     abundance.weighted = FALSE, runs = 25)
+NTI <- as.matrix(-1 * ((ses.mntd[,2] - ses.mntd[,3]) / ses.mntd[,4]))
+rownames(NTI) <- row.names(ses.mntd)
+colnames(NTI) <- "NTI"
 
 
 ```
@@ -195,6 +278,11 @@ In the R code chunk below, do the following:
 2. calculate the phylogenetically based community resemblance matrix using UniFrac distance.
 
 ```{r}
+# Mean Pairwise Distance
+dist.mp <- comdist(comm.ss, phydist)
+
+# UniFrac 
+dist.uf <- unifrac(comm.ss, phy)
 
 
 ```
@@ -203,6 +291,12 @@ In the R code chunk below, do the following:
 1. plot Mean Pair Distance versus UniFrac distance and compare.
 
 ```{r}
+par(mar = c(5, 5, 2, 1) + 0.1)
+plot(dist.mp, dist.uf, 
+     pch = 20, col = "azure3", las = 1, asp = 1, xlim = c(0.15, 0.5), ylim = c(0.15, 0.5),
+     xlab = "Mean Pair Distance", ylab = "UniFrac Distance", main = "Mean Pair Distance versus UniFrac Distance") 
+abline(b = 1, a = 0, lty = 2)
+text(0.5, 0.47, "1:1")
 
 
 ```
@@ -228,7 +322,12 @@ In the R code chunk below, do the following:
 2. calculate the explained variation for the first three PCoA axes.
 
 ```{r}
+pond.pcoa <- cmdscale(dist.uf, eig = T, k = 3)
 
+explainvar1 <- round(pond.pcoa$eig[1] / sum(pond.pcoa$eig), 3) * 100
+explainvar2 <- round(pond.pcoa$eig[2] / sum(pond.pcoa$eig), 3) * 100
+explainvar3 <- round(pond.pcoa$eig[3] / sum(pond.pcoa$eig), 3) * 100
+sum.eig <- sum(explainvar1, explainvar2, explainvar3)
 
 ```
 
@@ -241,7 +340,25 @@ In the R code chunk below, do the following:
 4. customize the plot. 
 
 ```{r}
+# Define Plot Parameters
+par(mar = c(5, 5, 1, 2) + 0.1)
 
+# Initiate Plot
+plot(pond.pcoa$points[ ,1], pond.pcoa$points[ ,2],
+     xlim = c(-0.2, 0.2), ylim = c(-.16, 0.16),
+     xlab = paste("PCoA 1 (", explainvar1, "%)", sep = ""),
+     ylab = paste("PCoA 2 (", explainvar2, "%)", sep = ""),
+     pch = 16, cex = 2.0, type = "n", cex.lab = 1.5, cex.axis = 1.2, axes = FALSE)
+
+axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+abline(h = 0, v = 0, lty = 3)
+box(lwd = 2)
+
+points(pond.pcoa$points[ ,1], pond.pcoa$points[ ,2],
+       pch = 19, cex = 3, bg = "gray", col = "gray")
+text(pond.pcoa$points[ ,1], pond.pcoa$points[ ,2], 
+     labels = row.names(pond.pcoa$points))
 
 ```
 
@@ -262,7 +379,17 @@ In the R code chunk below, do the following:
 1. test the hypothesis that watershed has an effect on the phylogenetic diversity of bacterial communities.
 
 ```{r}
+watershed <- env$Location
 
+# PERMAnova
+phylo.adonis <- adonis2(dist.uf ~ watershed, permutations = 999)
+
+
+tax.adonis <- adonis2(
+  vegdist(                             
+    decostand(comm, method = "log"),   
+    method = "bray") ~ watershed,      
+  permutations = 999)
 
 ```
 
@@ -273,6 +400,12 @@ In the R code chunk below, do the following:
 2. calculate environmental distance between ponds based on the Euclidean distance between sites in the environmental data matrix (after transforming and centering using `scale()`).
 
 ```{r}
+#custom variables
+envs <- env[, 5:19]
+envs <- envs[, -which(names(envs) %in% c("TDS", "Salinity", "Cal_Volume"))]
+
+#distance matrix
+env.dist <- vegdist(scale(envs), method = "euclid")
 
 
 ```
@@ -281,7 +414,7 @@ In the R code chunk below, do the following:
 1. conduct a Mantel test to evaluate whether or not UniFrac distance is correlated with environmental variation.
 
 ```{r}
-
+mantel(dist.uf, env.dist) 
 
 ```
 
@@ -293,7 +426,47 @@ In the R code chunk below, do the following:
 3. plot the dbRDA results
 
 ```{r}
+ponds.dbrda <- vegan::dbrda(dist.uf ~ ., data = as.data.frame(scale(envs)))
+anova(ponds.dbrda, by = "axis")
+ponds.fit <- envfit(ponds.dbrda, envs, perm = 999)
+#ponds.fit
+dbrda.explainvar1 <- round(ponds.dbrda$CCA$eig[1] / 
+                    sum(c(ponds.dbrda$CCA$eig, ponds.dbrda$CA$eig)), 3) * 100
+dbrda.explainvar2 <- round(ponds.dbrda$CCA$eig[2] / 
+                    sum(c(ponds.dbrda$CCA$eig, ponds.dbrda$CA$eig)), 3) * 100
 
+#Plot
+ponds_scores <- vegan::scores(ponds.dbrda, display = "sites")
+par(mar = c(5, 5, 4, 4) + 0.1)
+plot(ponds_scores, xlim = c(-2, 2), ylim = c(-2, 2),
+  xlab = paste("dbRDA 1 (", dbrda.explainvar1, "%)", sep = ""),
+  ylab = paste("dbRDA 2 (", dbrda.explainvar2, "%)", sep = ""),
+  pch = 16, cex = 2.0, type = "n", cex.lab = 1.5, cex.axis = 1.2, axes = FALSE)
+axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+abline(h = 0, v = 0, lty = 3)
+box(lwd = 2)
+pond_scores <- vegan::scores(ponds.dbrda, display = "sites")
+
+points(pond_scores, 
+       pch = 19, cex = 3, col = "gray")
+
+text(pond_scores, 
+     labels = rownames(pond_scores), 
+     cex = 0.5)
+vectors <- vegan::scores(ponds.dbrda, display = "bp")
+arrows(0, 0, vectors[,1] * 2, vectors[,2] * 2, 
+       lwd = 2, lty = 1, length = 0.2, col = "red")
+text(vectors[,1] * 2, vectors[,2] * 2, pos = 3, 
+     labels = rownames(vectors))
+
+axis(side = 3, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
+     at = pretty(range(vectors[, 1]) * 2), 
+     labels = pretty(range(vectors[, 1]) * 2))
+
+axis(side = 4, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
+     at = pretty(range(vectors[, 2]) * 2), 
+     labels = pretty(range(vectors[, 2]) * 2))
 
 ```
 
