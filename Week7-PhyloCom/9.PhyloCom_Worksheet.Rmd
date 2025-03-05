@@ -1,6 +1,6 @@
 ---
 title: '9\.Phylogenetic Diversity - Communities'
-author: "Anna Lennon
+author: "Anna Lennon"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 geometry: margin=2.54cm
@@ -189,9 +189,9 @@ a.  Based on how PD is calculated, how and why should this metric be related to 
 b.  When would you expect these two estimates of diversity to deviate from one another? 
 c.  Interpret the significance of the scaling PD-S scaling exponent.
 
-> ***Answer 1a***:  
-> ***Answer 1b***:  
-> ***Answer 1c***:  
+> ***Answer 1a***: Faith's D is the sum of all the branch lengths, which are the measurements of relatedness between species. Therefore, Faith's D reflects taxonomic richness present based on phylogeny. For example, with more branches, Faith's D is higher reflecting in higher taxonmic richness. As shown on the graph, Faith's D and species richness are related but the relationship levels off eventually. 
+> ***Answer 1b***:Species richness and Faith's D may diverge when comparing a small group very distantly related species which have very long branch lengths. This would result in low species richness but a high Faith's D value. 
+> ***Answer 1c***:  The PD-S scaling exponet is .75 resulting in the apperance of a linear relationship. However, given that the scaling exponent is less than one, the relationship is not linear rather increases expoentntially before plateuing. Therefore, when interpreting the graph it should be noted that the relationship between PD and S is not a linear positive correlation. 
 
 
 **i. Randomizations and Null Models**  
@@ -200,8 +200,15 @@ In the R code chunk below, do the following:
 1. estimate the standardized effect size of PD using the `richness` randomization method.  
 
 ```{r}
-ses.pd <- ses.pd(comm.ss[1:2,], phy, null.model = "richness", runs = 25, 
+ses.pd.richness <- ses.pd(comm.ss[1:2,], phy, null.model = "richness", runs = 25, 
                  include.root = FALSE)
+ses.pd.frequency <- ses.pd(comm.ss[1:2,], phy, null.model = "frequency", runs = 25, 
+                 include.root = FALSE)
+ses.pd.phylo <- ses.pd(comm.ss[1:2,], phy, null.model = "phylogeny.pool", runs = 25, 
+                 include.root = FALSE)
+ses.pd.richness
+ses.pd.frequency
+ses.pd.phylo
 ?ses.pd
 
 ```
@@ -211,9 +218,8 @@ ses.pd <- ses.pd(comm.ss[1:2,], phy, null.model = "richness", runs = 25,
 a.  What are the null and alternative hypotheses you are testing via randomization when calculating `ses.pd`?
 b.  How did your choice of null model influence your observed ses.pd values?  Explain why this choice affected or did not affect the output. 
 
-> ***Answer 2a***:  
-> ***Answer 2b***:  
-
+> ***Answer 2a***:The null hypothesis is that the sample is as diverse as expected while the alternative is that the community more more phylogenetically diverse than expected under the null model. From ses.pd, the sample's phylogenetic diversity is being tested under a null distribution to see if it aligns or not.
+> ***Answer 2b***: The different null models did not changed the observed ses.pd values. The three models I chose all focused on randomizing the data matrix. As a result, another model, such as taxa.labels, may result in a different PD value.
 ### B.  Phylogenetic Dispersion Within a Sample
 Another way to assess phylogenetic $\alpha$-diversity is to look at dispersion within a sample. 
 
@@ -238,7 +244,7 @@ ses.mpd <- ses.mpd(comm.ss, phydist, null.model = "taxa.labels",
 NRI <- as.matrix(-1 * ((ses.mpd[,2] - ses.mpd[,3]) / ses.mpd[,4]))
 rownames(NRI) <- row.names(ses.mpd)
 colnames(NRI) <- "NRI"
-
+NRI
 ```
 
 **iii.  Nearest Taxon Index (NTI)**
@@ -252,8 +258,7 @@ ses.mntd <- ses.mntd(comm.ss, phydist, null.model = "taxa.labels",
 NTI <- as.matrix(-1 * ((ses.mntd[,2] - ses.mntd[,3]) / ses.mntd[,4]))
 rownames(NTI) <- row.names(ses.mntd)
 colnames(NTI) <- "NTI"
-
-
+NTI
 ```
 
 ***Question 3***: 
@@ -265,9 +270,9 @@ d. In the NRI and NTI examples above, the arguments "abundance.weighted = FALSE"
 Modify and rerun the code so that NRI and NTI are calculated using abundance data. 
 How does this affect the interpretation of NRI and NTI?
 
-> ***Answer 3a***:  
-> ***Answer 3b***:  
-> ***Answer 3c***:  
+> ***Answer 3a***:NRI is calculated by taking the observed MPD and subtracting the random means generated MPD and dividing that by the standard deviation MPD generated under the null model.
+> ***Answer 3b***:NTI is very similar to NRI but utilizes MNND, or the mean phyogenetic distance between all the taxa and their neighbor, rather than the MPD. As a result, NTI calculates the difference between observed values of MNND and the observed random means and divises it by the randomizes standard deviation of MNND. 
+> ***Answer 3c***: FOr both NRI and NTI values, a majority are negative which indicates phylogenetic overdispersion or close taxa are less related than expected. A notable exception is that the NTI value for YST66 is positive while the NRI value is negative. A positive NTI value indicates phylogenetic clustering. Additionally, there are a few values that are very close to zero displaying these samples are dispersed according to the null model. 
 > ***Answer 3d***:  
 
 ## 5) PHYLOGENETIC BETA DIVERSITY 
@@ -309,9 +314,9 @@ Note: we are calculating unweighted phylogenetic distances (similar to incidence
 That means that we are not taking into account the abundance of each taxon in each site.
 c. Why might MPD show less variation than UniFrac?
 
-> ***Answer 4a***: 
-> ***Answer 4b***: 
-> ***Answer 4c***:
+> ***Answer 4a***: Mean pairwise distance takes the phyolgenetic distance (ie branch length) between two taxa as a metric as the distance between the two samples in terms of similarity or dissimilarity. Comparatively, UniFrac distance calculates the summation of all the unshared branch lengths and divides it by the summation of all the tree's branch lengths to determine if samples are more similar or dissimilar. The key difference is that UniFrac also includes unshared branch lengths in its calculation compared to Mean Pair distance that only includes the shared branches.
+> ***Answer 4b***: The graph displays a vertical clustering pattern, resulting in a linear slope of undefined meaning that Mean Pair Distance and UniFrac unweighted are completely unrelated. 
+> ***Answer 4c***: Given that mean pair distance only looks are shared branches, there will be less variation shown compared to UniFrac that incorporates other branch lengths in its model. 
 
 
 ### B. Visualizing Phylogenetic Beta-Diversity
@@ -340,10 +345,10 @@ In the R code chunk below, do the following:
 4. customize the plot. 
 
 ```{r}
-# Define Plot Parameters
+
 par(mar = c(5, 5, 1, 2) + 0.1)
 
-# Initiate Plot
+
 plot(pond.pcoa$points[ ,1], pond.pcoa$points[ ,2],
      xlim = c(-0.2, 0.2), ylim = c(-.16, 0.16),
      xlab = paste("PCoA 1 (", explainvar1, "%)", sep = ""),
@@ -366,10 +371,40 @@ In the following R code chunk:
 1. perform another PCoA on taxonomic data using an appropriate measure of dissimilarity, and
 2. calculate the explained variation on the first three PCoA axes. 
 
+```{r}
+pond.pcoa.mp <- cmdscale(dist.mp, eig = T, k = 3)
+
+explainvar1.mp <- round(pond.pcoa.mp$eig[1] / sum(pond.pcoa.mp$eig), 3) * 100
+explainvar2.mp <- round(pond.pcoa.mp$eig[2] / sum(pond.pcoa.mp$eig), 3) * 100
+explainvar3.mp <- round(pond.pcoa.mp$eig[3] / sum(pond.pcoa.mp$eig), 3) * 100
+sum.eig <- sum(explainvar1.mp, explainvar2.mp, explainvar3.mp)
+
+#Plot
+par(mar = c(5, 5, 1, 2) + 0.1)
+
+# Initiate Plot
+plot(pond.pcoa.mp$points[ ,1], pond.pcoa.mp$points[ ,2],
+     xlim = c(-0.2, 0.2), ylim = c(-.16, 0.16),
+     xlab = paste("PCoA 1 (", explainvar1.mp, "%)", sep = ""),
+     ylab = paste("PCoA 2 (", explainvar2.mp, "%)", sep = ""),
+     pch = 16, cex = 2.0, type = "n", cex.lab = 1.5, cex.axis = 1.2, axes = FALSE)
+
+axis(side = 1, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+axis(side = 2, labels = T, lwd.ticks = 2, cex.axis = 1.2, las = 1)
+abline(h = 0, v = 0, lty = 3)
+box(lwd = 2)
+
+points(pond.pcoa.mp$points[ ,1], pond.pcoa.mp$points[ ,2],
+       pch = 19, cex = 3, bg = "gray", col = "gray")
+text(pond.pcoa.mp$points[ ,1], pond.pcoa.mp$points[ ,2], 
+     labels = row.names(pond.pcoa.mp$points))
+
+```
+
 ***Question 5***: Using a combination of visualization tools and percent variation explained, how does the phylogenetically based ordination compare or contrast with the taxonomic ordination? 
 What does this tell you about the importance of phylogenetic information in this system?
 
-> ***Answer 5***: 
+> ***Answer 5***: The phylogenetically based PcoA explains very little of the variation compared to taxonomic ordination. In addition the the axis labels detailing the percent variation, in both PCoA visualizations there is very little clustering patterns that can be determined from the clustering. Therefore, phylogenetic information is not essential to this system when understanding the variation observed between samples. 
 
 ### C. Hypothesis Testing
 
@@ -387,7 +422,7 @@ phylo.adonis <- adonis2(dist.uf ~ watershed, permutations = 999)
 
 tax.adonis <- adonis2(
   vegdist(                             
-    decostand(comm, method = "log"),   
+    decostand(comm.ss, method = "log"),   
     method = "bray") ~ watershed,      
   permutations = 999)
 
@@ -400,7 +435,6 @@ In the R code chunk below, do the following:
 2. calculate environmental distance between ponds based on the Euclidean distance between sites in the environmental data matrix (after transforming and centering using `scale()`).
 
 ```{r}
-#custom variables
 envs <- env[, 5:19]
 envs <- envs[, -which(names(envs) %in% c("TDS", "Salinity", "Cal_Volume"))]
 
@@ -472,7 +506,7 @@ axis(side = 4, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
 
 ***Question 6***: Based on the multivariate procedures conducted above, describe the phylogenetic patterns of $\beta$-diversity for bacterial communities in the Indiana ponds.   
 
-> ***Answer 6***: 
+> ***Answer 6***: The inital question sought to understand the importance of watershed boundaries with particular environmental variables. Phylogenetically, there seems to be a very low amount of varation explained by the dbRDA with only a rough two clusters appearing on the visualization. The environmental variables that seem to have the greatest impact on phylogenetic patterns are "SpC", "Temp", "pH", and "chla. 
 
 ## SYNTHESIS
 
@@ -480,4 +514,4 @@ axis(side = 4, lwd.ticks = 2, cex.axis = 1.2, las = 1, col = "red", lwd = 2.2,
 Specifically, what kinds of phylogenetic data would you need? How could you use it to answer important questions in your field? 
 In your response, feel free to consider not only phylogenetic approaches related to phylogenetic community ecology, but also those we discussed last week in the PhyloTraits module, or any other concepts that we have not covered in this course.
 
-> ***Answer 7***: 
+> ***Answer 7***: Phylogenetic analysis is an essential portion to my own research. It would be very interesting to use phylogenetic data to understand how phylogenetic diversity in a biofilm results in increases resilience against stressors. This would require sampling two similar communities with one community exposed to an antibiotic stress and one that has not and sequencing them. From this experiment, it could be determiend how stressors shape the diversity present in a community and determine how comunal living may promote increased genetic diversity through mechanisms such as horizontal gene transfer. It would also be a very interesting element to sample these multicellular structures over time to see how interactions between indvidual organisms influences overall community composition, such as inducing increasing amount of dormant structures within a biofilm and see how diversity, both alpha and phylogenetic, changes over time. 
