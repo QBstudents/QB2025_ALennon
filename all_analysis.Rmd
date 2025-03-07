@@ -4,20 +4,37 @@ author: "Anna Lennon"
 date: "2025-03-07"
 output:
   pdf_document: default
-  html_document: default
 ---
-```{r}
+```{r cache=TRUE}
 library(readxl)
-library(tibble)
 library(dplyr)
 library(tidyr)
 library(vegan)
 library(ggplot2)
 library(tidyverse)
+library(lattice)
+library(ade4)
+library(viridis)
+library(gplots)
+library(bios2mds)
+library(Biostrings)
+library(ape)
+library(seqinr)
+library(phylobase)
+library(adephylo)
+library(geiger)
+library(picante)
+library(stats)
+library(RColorBrewer)
+library(phylolm)
+library(caper)
+library(pmc)
+library(phangorn)
+library(pander)
 ```
 
 
-```{r}
+```{r cache=TRUE}
 #tree data 
 tree <-read.csv("TREE.csv")
 
@@ -137,20 +154,11 @@ invasive.ECM.ss <- as.data.frame.matrix(table(invasive.ECM.df$Plot_ID, invasive.
 # invasive.both.ss <- as.data.frame.matrix(table(invasive.both.df$Plot_ID, invasive.both.df$SPCD))
 # invasive.both.ss <- rownames_to_column(invasive.both.ss, var = "Plot_ID")
 
-
-#OVERALL 
-# ninvasive.AM.ss
-# ninvasive.ECM.ss
-# ninvasive.both.ss
-# 
-# invasive.AM.ss
-# invasive.ECM.ss
-# invasive.both.ss
 ```
 
-```{r}
+```{r cache =TRUE}
 #Visualization of species present 
-dim(tree.species.df)
+#dim(tree.species.df)
 myco.df.all <-rbind(invasive.myco.df, ninvasive.myco.df)
 
 ggplot(invasive.myco.df) +
@@ -168,16 +176,19 @@ ggplot(ninvasive.myco.df) +
   ylab("Mycorrhizal Association") +
   ggtitle("Distribution of Mycorrhizal Type by Species in NonInvasive Plots") +
   theme_minimal()
-
-tree.db <-vegdist(tree.species.df[,2], method = "bray")
-
-order <-rev(attr(tree.db, "Labels"))
-levelplot(as.matrix(tree.db)[,order], aspect = "iso", col.regions =inferno,
-          xlab = "Plot", ylab = "Plot", scales =list(cex =.5),
-          main = "Bray-Curtis Distance")
 ```
 
-```{r}
+```{r cache=TRUE}
+tree.bray <-vegdist(invasive.AM.ss[1:643, 1:38], method = "bray")
+
+order <-rev(attr(tree.bray, "Labels"))
+levelplot(as.matrix(tree.bray)[,order], aspect = "iso", col.regions =inferno,
+          xlab = "Plot", ylab = "Plot", scales =list(cex =.5),
+          main = "Bray-Curtis Distance")
+
+```
+
+```{r cache =TRUE}
 #Alpha 
 #Observed richness
 S.obs <- function(x = ""){
@@ -294,21 +305,8 @@ text(100, 100, "1:1", pos = 2, col = 'red')
 title(main = "Rarefaction Curve of Invasive ECM Samples")
 ```
 
-```{r}
-library(readxl)
-library(tibble)
-library(dplyr)
-library(tidyr)
-library(vegan)
-library(lattice)
-library("ade4")
-library("viridis")
-library("gplots")
-library(tidyverse)
-```
 
-
-```{r}
+```{r cache =TRUE}
 # ninvasive.ECM.ss
 # invasive.AM.ss
 # invasive.ECM.ss
@@ -450,9 +448,7 @@ points(I.ECM.pcoa$points[,1], I.ECM.pcoa$points[,2],
 #      labels = row.names(I.ECM.pcoa$points), col = "black")
 
 title("Ordination of Invasive ECM Species")
-```
 
-```{r}
 #SS to use: ninvasive.AM.ss ninvasive.ECM.ss invasive.AM.ss invasive.ECM.ss
 #variable matrix: invasive.ss
 # NI.AM.db <-vegdist(ninvasive.AM.ss, method = "bray", binary =TRUE)
@@ -499,3 +495,11 @@ ntree.dbra <- dbrda(ninvasive.myco.db ~ ., as.data.frame(ninvasive.myco.ss))
 ordiplot(ntree.dbra)
   
 ```
+#Supplementary code:
+
+SPCDinfo <- read.csv("/cloud/project/QB_biodiversity_project_EH/SPCDinfo.csv")
+
+treesp <- SPCDinfo[c("Scientific.Name", "Genus", "Family")] #extract relevant cols 
+treephylo <- phylo.maker(treesp, scenarios = "S3", nodes = nodes.info.1) #make tree
+plot.phylo(treephylo$scenario.3, cex = .2)
+treephylo$scenario.3 
